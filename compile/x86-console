@@ -1,0 +1,57 @@
+#!/usr/bin/expect -f
+
+# Port of mips-console script to work with new galileo x86 backends
+# Javid Habibi, 2/8/2015 Feburary 2015
+
+set timeout -1
+set argc [llength $argv]
+
+if {$argc > 1} {
+  puts "$argc, $argv"
+  puts "usage: x86-console [backend]"
+  exit
+}
+
+if {$argc == 1} {
+  set backend $argv
+  set spawned [spawn cs-console -c quark $argv]
+} else {
+  set backend null
+  set spawned [spawn cs-console -c quark]
+}
+
+expect {
+        "error: connection not available" 
+                { send_user "error: connection not available\r\n"
+                  exit }
+        -re "connection '(.*)', class '(.*)', host '(.*)'\r\n"
+                { set backend $expect_out(1,string)
+                  set class   $expect_out(2,string)
+                  set host    $expect_out(3,string)
+                # send_user "connection $backend, class $class, host $host\r\n"
+                }
+}
+sleep 1
+send -null 1
+
+expect "(command-mode) "
+send -- "d"
+
+expect "file: "
+send -- "xinu.xbin\r"
+
+expect {
+        "download complete\r\n"
+                { }
+        "No such file or directory" 
+                { send_user "No such file: xinu.xbin\r\n"
+                  exit }
+}
+sleep 1
+send -null 1
+
+expect "(command-mode)"
+send -- "p"
+expect -re "connection 'galileo"
+
+interact
