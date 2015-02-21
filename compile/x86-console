@@ -1,7 +1,6 @@
 #!/usr/bin/expect -f
 
 # Port of mips-console script to work with new galileo x86 backends
-# Javid Habibi, 2/8/2015 Feburary 2015
 
 set timeout -1
 set argc [llength $argv]
